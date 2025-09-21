@@ -17,7 +17,11 @@
       "Bash(venv\\Scripts\\activate:*)",
       "Bash(./venv/Scripts/activate)",
       "Bash(where:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(miktex console:*)",
+      "Bash(miktex-console:*)",
+      "Bash(\"C:\\Users\\injoo\\AppData\\Local\\Programs\\MiKTeX\\miktex\\bin\\x64\\pdflatex.exe\" --version)",
+      "Bash(xelatex:*)"
     ],
     "deny": [],
     "ask": []
