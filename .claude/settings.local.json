@@ -7,7 +7,17 @@
       "Bash(jupyter:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git stash:*)",
+      "Bash(git restore:*)",
+      "Bash(git reset:*)",
+      "Bash(git checkout:*)",
+      "Bash(venv_newScripts:*)",
+      "Bash(venv_new\\Scripts\\activate.bat:*)",
+      "Bash(venv\\Scripts\\activate:*)",
+      "Bash(./venv/Scripts/activate)",
+      "Bash(where:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []
