@@ -1,0 +1,88 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{bm}
+\usepackage{kotex}
+\geometry{a4paper, margin=1in}
+
+\title{CSCI E-89B Lecture 1 \\ \large 아무것도 몰라도 이해되는 신경망 기초}
+\author{정리: InJoo 학습노트}
+\date{Fall 2025}
+
+\begin{document}
+\maketitle
+
+\section*{읽기 가이드}
+이 문서는 \textbf{전혀 모르는 사람}을 위해 작성되었다.
+수학식은 꼭 필요한 만큼만, 대신 \textbf{비유 + 손계산 예시 + 체크리스트}로 이해를 도와준다.
+
+\begin{itemize}[left=0pt]
+  \item \textbf{핵심 비유:} 신경망은 ``입력 재료 $\rightarrow$ 여러 단계의 조리(층) $\rightarrow$ 결과 요리''를 만드는 \textbf{레시피}이다.
+  \item \textbf{핵심 목표:} 예측이 실제와 얼마나 다른지(오차)를 숫자로 재고(\textit{손실 함수}), 그걸 줄이는 방향으로 레시피(가중치)를 조금씩 조정(\textit{경사 하강법})한다.
+  \item \textbf{읽는 순서:} 1) 신경망이 뭔지 직관, 2) 층/뉴런/활성화함수, 3) 손실/비용 함수, 4) 순전파/역전파 계산, 5) 경사하강법(배치/미니배치/SGD), 6) 실전 팁 \& FAQ.
+\end{itemize}
+
+\section{신경망을 아주 직관적으로 이해하기}
+\subsection*{한 줄 요약}
+신경망(Neural Network)은 \textbf{입력} $x$를 받아 \textbf{여러 층(layer)}을 거치며 \textbf{출력} $\hat{y}$를 만드는 \textbf{함수들의 합성}이다:
+\[
+\hat{y} = f^{(L)}\big(f^{(L-1)}(\cdots f^{(1)}(x)\cdots)\big).
+\]
+여기서 각 $f^{(\ell)}$은 \textbf{선형변환(가중치/편향)}과 \textbf{비선형 활성화 함수}로 이루어진다.
+
+\subsection*{왜 굳이 ``깊게(Deep)'' 써야 할까?}
+\begin{itemize}
+  \item 얕은(한두 단계) 모델은 \textbf{직선/완만한 곡선} 같은 단순한 경계만 만든다.
+  \item 복잡한 문제(예: 이미지/언어)는 \textbf{비선형 변환을 여러 번} 적용해 \textbf{복잡한 모양의 결정 경계}가 필요하다.
+  \item 층을 쌓으면, \textbf{간단한 조각 특징} $\rightarrow$ \textbf{중간 특징} $\rightarrow$ \textbf{고수준 의미} 식으로 표현이 점점 ``추상화''된다.
+\end{itemize}
+
+\section{뉴런, 층, 활성화 함수}
+\subsection{두 입력, 은닉 2, 출력 1인 \texttt{2-2-1} 미니 네트워크}
+\textbf{구성:}
+입력 $x = (x_1, x_2)$, 은닉층 뉴런 $u_1,u_2$, 출력 $\hat{y}$.
+은닉층은 \textbf{ReLU}를, 출력층은 회귀면 \textbf{선형}, 이진분류면 \textbf{시그모이드}, 다중분류면 \textbf{소프트맥스}를 쓴다고 생각하면 된다.
+
+\[
+\begin{aligned}
+u_1 &= f\!\left(w^{(1)}_{01} + w^{(1)}_{11}x_1 + w^{(1)}_{21}x_2\right),\\
+u_2 &= f\!\left(w^{(1)}_{02} + w^{(1)}_{12}x_1 + w^{(1)}_{22}x_2\right),\\
+\hat{y} &= g\!\left(w^{(2)}_0 + w^{(2)}_1 u_1 + w^{(2)}_2 u_2\right).
+\end{aligned}
+\]
+여기서 $f$는 은닉층 활성화, $g$는 출력층 활성화다.
+
+\subsection{활성화 함수(왜 \emph{비선형}이 필요?)}
+\begin{itemize}
+  \item \textbf{ReLU} ($f(x)=\max(0,x)$): 빠르고 간단, 깊은 네트워크에서도 학습 잘 됨. \emph{기본값}으로 생각해도 좋다.
+  \item \textbf{Sigmoid} ($\sigma(x)=1/(1+e^{-x})$): 출력이 (0,1)이라 \textbf{확률}처럼 해석 쉬움(이진분류 \textit{출력층}에 주로 사용).
+  \item \textbf{Softmax}: $\displaystyle \text{softmax}_j(z)=\frac{e^{z_j}}{\sum_k e^{z_k}}$ (다중분류 \textit{출력층}).
+  \item \textbf{Tanh}: $(-1,1)$ 범위. 옛날엔 자주 썼지만 ReLU에 밀림.
+\end{itemize}
+\textit{핵심:} 활성화가 \textbf{비선형}이어야 층을 쌓을 의미가 생긴다. 선형만 쌓으면 전체가 결국 또 선형이 된다.
+
+\section{손실(LOSS)과 비용(COST) 정확히 구분하기}
+\subsection{손실 함수 $L^{(i)}$ (한 샘플의 틀림 정도)}
+\begin{itemize}
+  \item \textbf{회귀(실수 예측):} \(\displaystyle L^{(i)} = \big(\hat{y}^{(i)}-y^{(i)}\big)^2\) (MSE 단일항)
+  \item \textbf{이진분류:} \(\displaystyle L^{(i)} = -\big(y^{(i)}\log\hat{y}^{(i)} + (1-y^{(i)})\log(1-\hat{y}^{(i)})\big)\)
+  \item \textbf{다중분류:} \(\displaystyle L^{(i)} = -\sum_{c=1}^M y_c^{(i)} \log \hat{y}_c^{(i)}\) (원-핫 $y$ 가정)
+\end{itemize}
+
+\subsection{비용 함수 $J(\mathbf{w})$ (데이터 전체 평균 오차)}
+\[
+J(\mathbf{w}) = \frac{1}{m}\sum_{i=1}^m L^{(i)}(\mathbf{w}).
+\]
+\textbf{요약:} \(\;L=\) 개별샘플 오류, \(\;J=\) 전체 평균 오류(우리가 \underline{최소화}하려는 목표).
+
+\section*{마무리 요약(핵심만 쏙)}
+\begin{itemize}
+  \item 신경망은 \textbf{선형 + 비선형} 변환을 층층이 쌓아 \textbf{복잡한 함수}를 근사한다.
+  \item \textbf{손실}은 한 샘플, \textbf{비용}은 전체 평균. 우리는 비용을 \textbf{내리도록} 가중치를 업데이트한다.
+  \item 순전파로 예측, 역전파로 기울기, 경사하강법으로 업데이트. \textbf{학습률/미니배치}가 실전 핵심 노브.
+\end{itemize}
+
+\end{document}

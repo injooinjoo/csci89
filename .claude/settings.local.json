@@ -21,7 +21,13 @@
       "Bash(miktex console:*)",
       "Bash(miktex-console:*)",
       "Bash(\"C:\\Users\\injoo\\AppData\\Local\\Programs\\MiKTeX\\miktex\\bin\\x64\\pdflatex.exe\" --version)",
-      "Bash(xelatex:*)"
+      "Bash(xelatex:*)",
+      "Bash(pdflatex:*)",
+      "Bash(\"C:\\Users\\injoo\\AppData\\Local\\Programs\\MiKTeX\\miktex\\bin\\x64\\xelatex.exe\" lecture_fixed.tex)",
+      "Bash(\"C:\\texlive\\2025\\bin\\windows\\xelatex.exe\" lecture_fixed.tex)",
+      "Bash(dir:*)",
+      "Bash(\"C:\\texlive\\2025\\bin\\windows\\xelatex.exe\" lecture_complete.tex)",
+      "Bash(\"C:\\texlive\\2025\\bin\\windows\\xelatex.exe\" all_lectures.tex)"
     ],
     "deny": [],
     "ask": []
