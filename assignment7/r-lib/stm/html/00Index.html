@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head><title>R: Estimation of the Structural Topic Model</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<link rel="stylesheet" type="text/css" href="R.css">
+</head><body><div class="container">
+<h1> Estimation of the Structural Topic Model
+<img class="toplogo" src="../../../doc/html/Rlogo.svg" alt="[R logo]">
+</h1>
+<hr>
+<div style="text-align: center;">
+<a href="../../../doc/html/packages.html"><img class="arrow" src="../../../doc/html/left.jpg" alt="[Up]"></a>
+<a href="../../../doc/html/index.html"><img class="arrow" src="../../../doc/html/up.jpg" alt="[Top]"></a>
+</div><h2>Documentation for package &lsquo;stm&rsquo; version 1.3.8</h2>
+
+<ul><li><a href="../DESCRIPTION" type="text/plain; charset=utf-8">DESCRIPTION file</a>.</li>
+<li><a href="../doc/index.html">User guides, package vignettes and other documentation.</a></li>
+<li><a href="../NEWS.Rd">Package NEWS</a>.</li>
+</ul>
+
+<h2>Help Pages</h2>
+
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="stm-package.html">stm-package</a></td>
+<td>Structural Topic Model</td></tr>
+<tr><td style="width: 25%;"><a href="alignCorpus.html">alignCorpus</a></td>
+<td>Align the vocabulary of a new corpus to an old corpus</td></tr>
+<tr><td style="width: 25%;"><a href="asSTMCorpus.html">asSTMCorpus</a></td>
+<td>STM Corpus Coercion</td></tr>
+<tr><td style="width: 25%;"><a href="checkBeta.html">checkBeta</a></td>
+<td>Looks for words that load exclusively onto a topic</td></tr>
+<tr><td style="width: 25%;"><a href="checkResiduals.html">checkResiduals</a></td>
+<td>Residual dispersion test for topic number</td></tr>
+<tr><td style="width: 25%;"><a href="cloud.html">cloud</a></td>
+<td>Plot a wordcloud</td></tr>
+<tr><td style="width: 25%;"><a href="convertCorpus.html">convertCorpus</a></td>
+<td>Convert 'stm' formatted documents to another format</td></tr>
+<tr><td style="width: 25%;"><a href="estimateEffect.html">estimateEffect</a></td>
+<td>Estimates regressions using an STM object</td></tr>
+<tr><td style="width: 25%;"><a href="make.heldout.html">eval.heldout</a></td>
+<td>Heldout Likelihood by Document Completion</td></tr>
+<tr><td style="width: 25%;"><a href="findThoughts.html">findThoughts</a></td>
+<td>Find Thoughts</td></tr>
+<tr><td style="width: 25%;"><a href="findTopic.html">findTopic</a></td>
+<td>Find topics that contain user specified words.</td></tr>
+<tr><td style="width: 25%;"><a href="fitNewDocuments.html">fitNewDocuments</a></td>
+<td>Fit New Documents</td></tr>
+<tr><td style="width: 25%;"><a href="gadarian.html">gadarian</a></td>
+<td>Gadarian and Albertson data</td></tr>
+<tr><td style="width: 25%;"><a href="gadarian.html">gadarianFit</a></td>
+<td>Gadarian and Albertson data</td></tr>
+<tr><td style="width: 25%;"><a href="textProcessor.html">head.textProcessor</a></td>
+<td>Process a vector of raw texts</td></tr>
+<tr><td style="width: 25%;"><a href="labelTopics.html">labelTopics</a></td>
+<td>Label topics</td></tr>
+<tr><td style="width: 25%;"><a href="make.dt.html">make.dt</a></td>
+<td>Make a 'data.table' of topic proportions.</td></tr>
+<tr><td style="width: 25%;"><a href="make.heldout.html">make.heldout</a></td>
+<td>Heldout Likelihood by Document Completion</td></tr>
+<tr><td style="width: 25%;"><a href="manyTopics.html">manyTopics</a></td>
+<td>Performs model selection across separate STM's that each assume different numbers of topics.</td></tr>
+<tr><td style="width: 25%;"><a href="multiSTM.html">multiSTM</a></td>
+<td>Analyze Stability of Local STM Mode</td></tr>
+<tr><td style="width: 25%;"><a href="optimizeDocument.html">optimizeDocument</a></td>
+<td>Optimize Document</td></tr>
+<tr><td style="width: 25%;"><a href="permutationTest.html">permutationTest</a></td>
+<td>Permutation test of a binary covariate.</td></tr>
+<tr><td style="width: 25%;"><a href="plot.estimateEffect.html">plot.estimateEffect</a></td>
+<td>Plot effect of covariates on topics</td></tr>
+<tr><td style="width: 25%;"><a href="findThoughts.html">plot.findThoughts</a></td>
+<td>Find Thoughts</td></tr>
+<tr><td style="width: 25%;"><a href="plot.MultimodDiagnostic.html">plot.MultimodDiagnostic</a></td>
+<td>Plotting Method for Multimodality Diagnostic Objects</td></tr>
+<tr><td style="width: 25%;"><a href="plot.searchK.html">plot.searchK</a></td>
+<td>Plots diagnostic values resulting from searchK</td></tr>
+<tr><td style="width: 25%;"><a href="plot.STM.html">plot.STM</a></td>
+<td>Functions for plotting STM objects</td></tr>
+<tr><td style="width: 25%;"><a href="plot.STMpermute.html">plot.STMpermute</a></td>
+<td>Plot an STM permutation test.</td></tr>
+<tr><td style="width: 25%;"><a href="plot.topicCorr.html">plot.topicCorr</a></td>
+<td>Plot a topic correlation graph</td></tr>
+<tr><td style="width: 25%;"><a href="plotModels.html">plotModels</a></td>
+<td>Plots semantic coherence and exclusivity for high likelihood models outputted from selectModel.</td></tr>
+<tr><td style="width: 25%;"><a href="plotQuote.html">plotQuote</a></td>
+<td>Plots strings</td></tr>
+<tr><td style="width: 25%;"><a href="plotRemoved.html">plotRemoved</a></td>
+<td>Plot documents, words and tokens removed at various word thresholds</td></tr>
+<tr><td style="width: 25%;"><a href="plotTopicLoess.html">plotTopicLoess</a></td>
+<td>Plot some effects with loess</td></tr>
+<tr><td style="width: 25%;"><a href="poliblog5k.html">poliblog5k</a></td>
+<td>CMU 2008 Political Blog Corpus</td></tr>
+<tr><td style="width: 25%;"><a href="poliblog5k.html">poliblog5k.docs</a></td>
+<td>CMU 2008 Political Blog Corpus</td></tr>
+<tr><td style="width: 25%;"><a href="poliblog5k.html">poliblog5k.meta</a></td>
+<td>CMU 2008 Political Blog Corpus</td></tr>
+<tr><td style="width: 25%;"><a href="poliblog5k.html">poliblog5k.voc</a></td>
+<td>CMU 2008 Political Blog Corpus</td></tr>
+<tr><td style="width: 25%;"><a href="prepDocuments.html">prepDocuments</a></td>
+<td>Prepare documents for analysis with 'stm'</td></tr>
+<tr><td style="width: 25%;"><a href="findThoughts.html">print.findThoughts</a></td>
+<td>Find Thoughts</td></tr>
+<tr><td style="width: 25%;"><a href="labelTopics.html">print.labelTopics</a></td>
+<td>Label topics</td></tr>
+<tr><td style="width: 25%;"><a href="multiSTM.html">print.MultimodDiagnostic</a></td>
+<td>Analyze Stability of Local STM Mode</td></tr>
+<tr><td style="width: 25%;"><a href="sageLabels.html">print.sageLabels</a></td>
+<td>Displays verbose labels that describe topics and topic-covariate groups in depth.</td></tr>
+<tr><td style="width: 25%;"><a href="summary.STM.html">print.STM</a></td>
+<td>Summary Function for the STM objects</td></tr>
+<tr><td style="width: 25%;"><a href="summary.estimateEffect.html">print.summary.estimateEffect</a></td>
+<td>Summary for estimateEffect</td></tr>
+<tr><td style="width: 25%;"><a href="textProcessor.html">print.textProcessor</a></td>
+<td>Process a vector of raw texts</td></tr>
+<tr><td style="width: 25%;"><a href="readCorpus.html">readCorpus</a></td>
+<td>Read in a corpus file.</td></tr>
+<tr><td style="width: 25%;"><a href="readLdac.html">readLdac</a></td>
+<td>Read in a .ldac Formatted File</td></tr>
+<tr><td style="width: 25%;"><a href="s.html">s</a></td>
+<td>Make a B-spline Basis Function</td></tr>
+<tr><td style="width: 25%;"><a href="sageLabels.html">sageLabels</a></td>
+<td>Displays verbose labels that describe topics and topic-covariate groups in depth.</td></tr>
+<tr><td style="width: 25%;"><a href="searchK.html">searchK</a></td>
+<td>Computes diagnostic values for models with different values of K (number of topics).</td></tr>
+<tr><td style="width: 25%;"><a href="selectModel.html">selectModel</a></td>
+<td>Assists the user in selecting the best STM model.</td></tr>
+<tr><td style="width: 25%;"><a href="stm.html">stm</a></td>
+<td>Variational EM for the Structural Topic Model</td></tr>
+<tr><td style="width: 25%;"><a href="summary.estimateEffect.html">summary.estimateEffect</a></td>
+<td>Summary for estimateEffect</td></tr>
+<tr><td style="width: 25%;"><a href="summary.STM.html">summary.STM</a></td>
+<td>Summary Function for the STM objects</td></tr>
+<tr><td style="width: 25%;"><a href="textProcessor.html">summary.textProcessor</a></td>
+<td>Process a vector of raw texts</td></tr>
+<tr><td style="width: 25%;"><a href="textProcessor.html">textProcessor</a></td>
+<td>Process a vector of raw texts</td></tr>
+<tr><td style="width: 25%;"><a href="thetaPosterior.html">thetaPosterior</a></td>
+<td>Draw from Theta Posterior</td></tr>
+<tr><td style="width: 25%;"><a href="toLDAvis.html">toLDAvis</a></td>
+<td>Wrapper to launch LDAvis topic browser.</td></tr>
+<tr><td style="width: 25%;"><a href="toLDAvisJson.html">toLDAvisJson</a></td>
+<td>Wrapper to create Json mapping for LDAvis. This can be useful in indirect render e.g. Shiny Dashboards</td></tr>
+<tr><td style="width: 25%;"><a href="topicCorr.html">topicCorr</a></td>
+<td>Estimate topic correlation</td></tr>
+<tr><td style="width: 25%;"><a href="topicLasso.html">topicLasso</a></td>
+<td>Plot predictions using topics</td></tr>
+<tr><td style="width: 25%;"><a href="topicQuality.html">topicQuality</a></td>
+<td>Plots semantic coherence and exclusivity for each topic.</td></tr>
+<tr><td style="width: 25%;"><a href="writeLdac.html">writeLdac</a></td>
+<td>Write a .ldac file</td></tr>
+</table>
+</div></body></html>

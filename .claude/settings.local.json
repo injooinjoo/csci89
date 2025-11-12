@@ -27,7 +27,9 @@
       "Bash(\"C:\\texlive\\2025\\bin\\windows\\xelatex.exe\" lecture_fixed.tex)",
       "Bash(dir:*)",
       "Bash(\"C:\\texlive\\2025\\bin\\windows\\xelatex.exe\" lecture_complete.tex)",
-      "Bash(\"C:\\texlive\\2025\\bin\\windows\\xelatex.exe\" all_lectures.tex)"
+      "Bash(\"C:\\texlive\\2025\\bin\\windows\\xelatex.exe\" all_lectures.tex)",
+      "Bash(powershell:*)",
+      "Bash(c:/Dev/csci89/venv/Scripts/python.exe:*)"
     ],
     "deny": [],
     "ask": []

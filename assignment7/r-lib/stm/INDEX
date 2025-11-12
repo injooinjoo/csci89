@@ -1,0 +1,64 @@
+alignCorpus             Align the vocabulary of a new corpus to an old
+                        corpus
+asSTMCorpus             STM Corpus Coercion
+checkBeta               Looks for words that load exclusively onto a
+                        topic
+checkResiduals          Residual dispersion test for topic number
+cloud                   Plot a wordcloud
+convertCorpus           Convert 'stm' formatted documents to another
+                        format
+estimateEffect          Estimates regressions using an STM object
+findThoughts            Find Thoughts
+findTopic               Find topics that contain user specified words.
+fitNewDocuments         Fit New Documents
+gadarian                Gadarian and Albertson data
+labelTopics             Label topics
+make.dt                 Make a 'data.table' of topic proportions.
+make.heldout            Heldout Likelihood by Document Completion
+manyTopics              Performs model selection across separate STM's
+                        that each assume different numbers of topics.
+multiSTM                Analyze Stability of Local STM Mode
+optimizeDocument        Optimize Document
+permutationTest         Permutation test of a binary covariate.
+plot.MultimodDiagnostic
+                        Plotting Method for Multimodality Diagnostic
+                        Objects
+plot.STM                Functions for plotting STM objects
+plot.STMpermute         Plot an STM permutation test.
+plot.estimateEffect     Plot effect of covariates on topics
+plot.searchK            Plots diagnostic values resulting from searchK
+plot.topicCorr          Plot a topic correlation graph
+plotModels              Plots semantic coherence and exclusivity for
+                        high likelihood models outputted from
+                        selectModel.
+plotQuote               Plots strings
+plotRemoved             Plot documents, words and tokens removed at
+                        various word thresholds
+plotTopicLoess          Plot some effects with loess
+poliblog5k              CMU 2008 Political Blog Corpus
+prepDocuments           Prepare documents for analysis with 'stm'
+readCorpus              Read in a corpus file.
+readLdac                Read in a .ldac Formatted File
+s                       Make a B-spline Basis Function
+sageLabels              Displays verbose labels that describe topics
+                        and topic-covariate groups in depth.
+searchK                 Computes diagnostic values for models with
+                        different values of K (number of topics).
+selectModel             Assists the user in selecting the best STM
+                        model.
+stm                     Variational EM for the Structural Topic Model
+stm-package             Structural Topic Model
+summary.STM             Summary Function for the STM objects
+summary.estimateEffect
+                        Summary for estimateEffect
+textProcessor           Process a vector of raw texts
+thetaPosterior          Draw from Theta Posterior
+toLDAvis                Wrapper to launch LDAvis topic browser.
+toLDAvisJson            Wrapper to create Json mapping for LDAvis. This
+                        can be useful in indirect render e.g. Shiny
+                        Dashboards
+topicCorr               Estimate topic correlation
+topicLasso              Plot predictions using topics
+topicQuality            Plots semantic coherence and exclusivity for
+                        each topic.
+writeLdac               Write a .ldac file
