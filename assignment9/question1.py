@@ -1,137 +1,151 @@
-# assignment9_problem1_clean_tfidf_svm.py
-# pip: pandas numpy scikit-learn nltk matplotlib
+# problem1
 
-import re, warnings
-warnings.filterwarnings("ignore")
+import re
+import nltk
 
-import numpy as np
-import pandas as pd
+# Download 
+nltk.download("punkt")
+nltk.download("punkt_tab")
+nltk.download("averaged_perceptron_tagger")
+nltk.download("averaged_perceptron_tagger_eng")
 
-from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-from sklearn.svm import LinearSVC
-from sklearn.linear_model import LogisticRegression
+from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk import pos_tag
 
-# -----------------------
-# 1) Load
-# -----------------------
-df = pd.read_csv("news_data.csv")
-# 예상 컬럼명: news_headline, news_article, news_category (이름이 다르면 아래 라인만 바꿔)
-text = (df["news_headline"].astype(str) + " . " + df["news_article"].astype(str)).fillna("")
-y_raw = df["news_category"].astype(str)
 
-# -----------------------
-# 2) Clean
-# -----------------------
-BOILER_PATTERNS = [
-    r"\bgoogle\s*maps\b", r"\bclick here\b", r"\bread more\b", r"\bcopyright\s+\d{4}\b",
-    r"\ballg\b", r"\bzeitung\b", r"\breuters\b", r"\bafp\b", r"\bap news\b",
-]
-URL = r"http[s]?://\S+|www\.\S+"
-EMAIL = r"\S+@\S+"
-NUM = r"\b\d+(?:[\.,]\d+)*\b"
+# 1. Data
+text = """
+US to convene global AI safety summit in November
+By David Shepardson
+September 19, 2024 1:10 AM GMT+9 Updated September 19, 2024
 
-def clean_text(s: str) -> str:
-    s = s.lower()
-    s = re.sub(URL, " ", s)
-    s = re.sub(EMAIL, " ", s)
-    # 보일러플레이트 제거
-    for p in BOILER_PATTERNS:
-        s = re.sub(p, " ", s, flags=re.IGNORECASE)
-    # 괄호/구두점 등 정리
-    s = re.sub(r"[\(\)\[\]\{\}<>]", " ", s)
-    s = re.sub(NUM, " ", s)
-    s = re.sub(r"[^a-z\s']", " ", s)
-    s = re.sub(r"\s+", " ", s).strip()
-    return s
+AI for Good Global summit
+Visitors take pictures of Captcha, a robot by Hidoba Research, during the AI for Good Global summit on artificial intelligence, organised by the International Telecommunication Union (ITU), in Geneva, Switzerland, May 30, 2024. REUTERS/Denis Balibouse/File photo Purchase Licensing Rights, opens new tab
 
-clean = text.apply(clean_text)
+WASHINGTON, Sept 18 (Reuters) - The Biden administration plans to convene a global safety summit on artificial intelligence, it said on Wednesday, as Congress continues to struggle with regulating the technology.
+Commerce Secretary Gina Raimondo and Secretary of State Anthony Blinken will host on Nov. 20-21 the first meeting of the International Network of AI Safety Institutes in San Francisco to "advance global cooperation toward the safe, secure, and trustworthy development of artificial intelligence."
 
-# 너무 짧은 문서 제거 (토큰 < 5)
-mask = clean.str.split().apply(len) >= 5
-clean = clean[mask]
-y_raw = y_raw[mask]
+The Reuters Daily Briefing newsletter provides all the news you need to start your day. Sign up here.
 
-# -----------------------
-# 3) Vectorize (TF-IDF)
-# -----------------------
-# 경험상: sublinear_tf=True, max_df=0.9, min_df=3가 안정적
-tfidf = TfidfVectorizer(
-    ngram_range=(1,2),
-    max_df=0.9,
-    min_df=3,
-    sublinear_tf=True,
-    stop_words="english"  # 영문 기준
-)
-X = tfidf.fit_transform(clean)
+The network members include Australia, Canada, the European Union, France, Japan, Kenya, South Korea, Singapore, Britain, and the United States.
+Generative AI - which can create text, photos and videos in response to open-ended prompts - has spurred excitement as well as fears it could make some jobs obsolete, upend elections and potentially overpower humans and have catastrophic effects.
 
-le = LabelEncoder()
-y = le.fit_transform(y_raw)
-classes = list(le.classes_)
+Raimondo in May announced the launch of the International Network of AI Safety Institutes during the AI Seoul Summit in May, where nations agreed to prioritize AI safety, innovation and inclusivity. The goal of the San Francisco meeting is to jumpstart technical collaboration before the AI Action Summit in Paris in February.
 
-# -----------------------
-# 4) Split
-# -----------------------
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y
+Raimondo said the aim is "close, thoughtful coordination with our allies and like-minded partners."
+"We want the rules of the road on AI to be underpinned by safety, security, and trust," she added.
+
+The San Francisco meeting will include technical experts from each member’s AI safety institute, or equivalent government-backed scientific office, to discuss priority work areas, and advance global collaboration and knowledge sharing on AI safety.
+
+Last week, the Commerce Department said it was proposing to require detailed reporting requirements for advanced AI developers and cloud computing providers to ensure the technologies are safe and can withstand cyberattacks.
+The regulatory push comes as legislative action in Congress on AI has stalled.
+
+President Joe Biden in October 2023 signed an executive order requiring developers of AI systems posing risks to U.S. national security, the economy, public health or safety to share the results of safety tests with the U.S. government before they are publicly released.
+
+How a Hungarian company aims to replace road stone with trash
+
+Reporting by David Shepardson; editing by Miral Fahmy
+Our Standards: The Thomson Reuters Trust Principles.
+"""
+
+
+# 2. Regex patterns
+
+# Person names with titles
+person_pattern = re.compile(
+    r'\b(Mr|Mrs|Ms|Dr|Prof)\.?\s+[A-Z][a-z]+\s+[A-Z][a-z]+\b'
 )
 
-# -----------------------
-# 5) Train: Linear SVM (baseline strong)
-# -----------------------
-svm = LinearSVC(C=1.0)  # 필요시 C 조절
-svm.fit(X_train, y_train)
-pred = svm.predict(X_test)
-acc = accuracy_score(y_test, pred)
+# Organization names
+org_pattern = re.compile(
+    r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+'
+    r'(Inc|Ltd|Corp|Corporation|Company)\b'
+)
 
-# (선택) 로지스틱 비교
-# logreg = LogisticRegression(
-#     penalty="l2", solver="saga", max_iter=3000, n_jobs=-1, C=2.0, class_weight="balanced"
-# )
-# logreg.fit(X_train, y_train)
-# pred_lr = logreg.predict(X_test)
-# acc_lr = accuracy_score(y_test, pred_lr)
+# Expanded date pattern:
+month_names = (
+    "Jan|January|Feb|February|Mar|March|Apr|April|May|Jun|June|Jul|July|"
+    "Aug|August|Sep|Sept|September|Oct|October|Nov|November|Dec|December"
+)
 
-# -----------------------
-# 6) Report-friendly outputs
-# -----------------------
-print("\n=== Problem 1 — Clean TF-IDF + LinearSVC ===")
-print(f"Documents: {X.shape[0]}  |  Features: {X.shape[1]}  |  Classes: {len(classes)}")
-print(f"Test Accuracy (LinearSVC): {acc:.4f}")
-print("Random Baseline:", f"{1.0/len(classes):.4f}", f"(K={len(classes)})\n")
+date_pattern = re.compile(
+    rf'\b('
+    rf'\d{{1,2}}[/-]\d{{1,2}}[/-]\d{{2,4}}'                 
+    rf'|'
+    rf'\d{{4}}-\d{{1,2}}-\d{{1,2}}'                         
+    rf'|'
+    rf'(?:{month_names})\s+\d{{1,2}}(?:st|nd|rd|th)?,?\s+\d{{4}}'   
+    rf'|'
+    rf'\d{{1,2}}(?:st|nd|rd|th)?\s+(?:{month_names}),?\s+\d{{4}}'  
+    rf'|'
+    rf'(?:{month_names})\s+\d{{4}}'      
+    rf')\b'
+)
 
-print("Classification Report (SVM):")
-print(classification_report(y_test, pred, target_names=classes, digits=3))
+# Time pattern
+time_pattern = re.compile(
+    r'\b\d{1,2}:\d{2}(?::\d{2})?\s?(AM|PM|am|pm)?\b'
+)
 
-cm = confusion_matrix(y_test, pred)
-np.set_printoptions(linewidth=200)
-print("Confusion Matrix (rows=true, cols=pred):\n", cm)
+# Email pattern
+email_pattern = re.compile(
+    r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,7}\b'
+)
 
-# -----------------------
-# 7) Top features per class (for report)
-# -----------------------
-def top_terms_per_class(clf, vectorizer, n=15):
-    # LinearSVC has coef_ for OvR
-    if not hasattr(clf, "coef_"):
-        return {}
-    terms = np.array(vectorizer.get_feature_names_out())
-    tops = {}
-    for i, cls in enumerate(classes):
-        coef = clf.coef_[i]
-        idx = np.argsort(coef)[-n:][::-1]
-        tops[cls] = list(terms[idx])
-    return tops
 
-tops = top_terms_per_class(svm, tfidf, n=15)
-print("\nTop 15 terms per class (SVM):")
-for c, words in tops.items():
-    print(f"- {c}: {', '.join(words)}")
+# 3. NNP/NNPS-based location extraction 
+def extract_locations_with_pos(text_str):
+    locations = set()
 
-# Save a tiny TSV for the report
-with open("problem1_top_terms.tsv", "w", encoding="utf-8") as f:
-    for c, words in tops.items():
-        f.write(f"{c}\t{','.join(words)}\n")
+    sentences = sent_tokenize(text_str)
+    for sent in sentences:
+        tokens = word_tokenize(sent)
+        tagged = pos_tag(tokens)
 
-print("\nSaved: problem1_top_terms.tsv")
+        current_seq = []
+        for word, tag in tagged:
+            if tag in ("NNP", "NNPS"):
+                current_seq.append(word)
+            else:
+                if len(current_seq) > 0:
+                    loc = " ".join(current_seq)
+                    locations.add(loc)
+                    current_seq = []
+        if len(current_seq) > 0:
+            loc = " ".join(current_seq)
+            locations.add(loc)
+
+    return locations
+
+
+# 4. Main extraction
+def extract_entities(text_str):
+    
+    persons = set(m.group(0) for m in person_pattern.finditer(text_str))
+    orgs    = set(m.group(0) for m in org_pattern.finditer(text_str))
+    dates   = set(m.group(0) for m in date_pattern.finditer(text_str))
+    times   = set(m.group(0) for m in time_pattern.finditer(text_str))
+    emails  = set(m.group(0) for m in email_pattern.finditer(text_str))
+
+    locs = extract_locations_with_pos(text_str)
+
+    # Remove overlaps
+    locs = {l for l in locs if (l not in persons and l not in orgs)}
+
+    result = {
+        "PERSON": sorted(persons),
+        "ORG": sorted(orgs),
+        "LOC": sorted(locs),
+        "DATE": sorted(dates),
+        "TIME": sorted(times),
+        "EMAIL": sorted(emails),
+    }
+    return result
+
+if __name__ == "__main__":
+    entities = extract_entities(text)
+
+    for label, items in entities.items():
+        print(f"\n{label}:")
+        for ent in items:
+            print("  -", ent)
