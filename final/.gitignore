@@ -1,0 +1,14 @@
+# data
+/data/raw/
+/data/processed/
+
+# R
+.Rhistory
+.RData
+.Rproj.user
+*_cache/
+*_files/
+
+# outputs
+/report/figures/*.png
+/report/tables/*.csv

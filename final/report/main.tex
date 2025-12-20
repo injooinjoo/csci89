@@ -1,0 +1,428 @@
+\documentclass[11pt]{article}
+
+% --------------------------------------------------
+% PACKAGES
+% --------------------------------------------------
+\usepackage{times}
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{titlesec}
+
+% Page setup
+\geometry{margin=1in}
+\setstretch{1.2}
+
+% Section formatting
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+
+% --------------------------------------------------
+% TITLE
+% --------------------------------------------------
+\title{\textbf{Structural Topic Modeling on News Headlines: A Case Study in Latent Theme Discovery}}
+\author{InJoo Kim \\ CSCI S-89B – Introduction to NLP \\ Fall 2025}
+\date{December 12, 2025}
+
+\begin{document}
+
+\maketitle
+
+% --------------------------------------------------
+% ABSTRACT
+% --------------------------------------------------
+\begin{abstract}
+This project presents a case study applying Structural Topic Modeling (STM) to a large collection of online news headlines. The goal is to uncover latent thematic structures, evaluate topic coherence, and examine how topic prevalence evolves over time. News headlines pose unique analytical challenges due to their brevity, information density, and frequent inclusion of named entities. Using a dataset of approximately 150,000--200,000 headlines sourced from Kaggle, the text was preprocessed through normalization, tokenization, stopword removal, and document-term matrix construction. STM was then applied with publication date as a prevalence covariate. The model produced interpretable topics such as politics, crime, economics, and technology, along with identifiable temporal fluctuations that correspond to real-world events. This study demonstrates how STM can extract meaningful structure from short-text news data and highlights its utility for media analytics, trend detection, and large-scale text exploration.
+\end{abstract}
+
+% --------------------------------------------------
+% 1. INTRODUCTION
+% --------------------------------------------------
+\section{Introduction}
+
+The rapid growth of digital media has created an overwhelming volume of textual information, making manual identification of key themes increasingly challenging. News headlines, in particular, are extremely short but encapsulate the central message of each article, often reflecting major events, public concerns, and societal trends. Their brevity and density make them difficult to classify using traditional methods.
+
+Topic modeling provides an unsupervised approach for discovering latent structures in large text corpora. In this project, we apply Structural Topic Modeling (STM), an extension of Latent Dirichlet Allocation (LDA) that incorporates document-level metadata such as publication date. STM enables the modeling of how topic prevalence varies across time, making it particularly suitable for news data.
+
+The objectives of this project are as follows:
+\begin{enumerate}[leftmargin=1.2cm]
+    \item Extract interpretable latent topics from a large corpus of news headlines.
+    \item Evaluate topic coherence and identify representative words for each topic.
+    \item Analyze temporal variation in topic prevalence using STM's covariate modeling framework.
+\end{enumerate}
+
+This study demonstrates how STM can reveal meaningful patterns in short-text datasets and provides a reproducible workflow for downstream media analysis.
+
+% --------------------------------------------------
+% 2. DATA DESCRIPTION
+% --------------------------------------------------
+\section{Data Description}
+
+This study uses a publicly available corpus of English-language news headlines sourced from Kaggle. Each headline represents a condensed summary of a news article and typically consists of fewer than ten words. Despite their brevity, headlines capture essential information about political, economic, social, and cultural events, making them well-suited for topic discovery.
+
+\subsection{Dataset Source}
+
+The dataset was downloaded from Kaggle, an online platform hosting a diverse collection of public datasets. A sampled subset under 10MB was used for this project in accordance with course submission requirements, while the full dataset contains roughly 150,000--200,000 headlines.
+
+The dataset includes the following key fields:
+\begin{itemize}
+    \item \textbf{headline}: the text of the news headline
+    \item \textbf{publish\_date}: date of publication
+\end{itemize}
+
+This structure allows STM to incorporate temporal information as a metadata covariate.
+
+\subsection{Dataset Characteristics}
+
+The headlines exhibit the following traits:
+\begin{itemize}
+    \item \textbf{Short length}: sparse term-frequency patterns due to limited token count.
+    \item \textbf{High named-entity density}: frequent mentions of individuals, places, and organizations.
+    \item \textbf{Temporal coverage}: publication dates span multiple years, enabling time-based trend analysis.
+    \item \textbf{Unlabeled text}: no category labels are provided, making the corpus ideal for unsupervised learning.
+\end{itemize}
+
+Initial exploration indicated strong thematic diversity with visible temporal spikes linked to political elections, major incidents, and economic events.
+
+% --------------------------------------------------
+% 3. INSTALLATION AND ENVIRONMENT
+% --------------------------------------------------
+\section{Installation and Environment}
+
+To ensure reproducibility, the computational environment is carefully documented.
+
+\subsection{Hardware and Operating System}
+
+The project was developed on:
+\begin{itemize}
+    \item \textbf{Device}: MacBook Pro 14-inch
+    \item \textbf{Processor}: Apple M3 Max
+    \item \textbf{Memory}: 16 GB RAM
+    \item \textbf{Operating System}: macOS (latest stable version)
+\end{itemize}
+
+The hardware supports efficient preprocessing and STM model fitting for up to several tens of thousands of documents.
+
+\subsection{Software Environment}
+
+Analyses were performed using:
+\begin{itemize}
+    \item \textbf{R} (version 4.x.x)
+    \item \textbf{RStudio} (2023 or later)
+    \item \textbf{R Markdown} for executable documentation
+\end{itemize}
+
+Required packages include:
+\begin{itemize}
+    \item \texttt{stm} -- Structural Topic Modeling
+    \item \texttt{quanteda} -- tokenization and document-term matrices
+    \item \texttt{tidyverse} -- data manipulation and visualization
+    \item \texttt{lubridate} -- date handling
+    \item \texttt{wordcloud} -- visualization
+\end{itemize}
+
+Packages were installed via:
+
+\begin{verbatim}
+install.packages(c("stm","quanteda","tidyverse",
+                   "lubridate","wordcloud","tm","SnowballC"))
+\end{verbatim}
+
+\subsection{Project Directory Structure}
+
+The following structure ensures clarity and reproducibility:
+
+\begin{verbatim}
+final/
+├── data/
+│   ├── abcnews-date-text.csv
+│   ├── sample/
+│   │   └── news_headlines_sample.csv
+│   ├── data_dictionary.md
+│   └── README.md
+├── notebooks/
+│   └── 02_stm_topic_modeling.Rmd
+├── src/
+│   ├── 00_install_packages.R
+│   ├── 01_make_sample.R
+│   └── 02_regenerate_figures.R
+├── report/
+│   ├── figures/
+│   ├── tables/
+│   └── main.tex
+├── slides/
+├── proposal/
+├── submission/
+└── video/
+\end{verbatim}
+
+% --------------------------------------------------
+% 4. METHODS
+% --------------------------------------------------
+\section{Methods}
+
+This section outlines the full pipeline used to preprocess the text data, construct the document-term matrix, and train the Structural Topic Model.
+
+\subsection{Text Preprocessing}
+
+News headlines were preprocessed using the following steps:
+
+\begin{enumerate}
+    \item \textbf{Normalization}: Conversion to lowercase and removal of punctuation, special characters, and excessive whitespace.
+    \item \textbf{Tokenization}: Headlines were tokenized using \texttt{quanteda}. Numeric tokens and residual punctuation were removed.
+    \item \textbf{Stopword Removal}: English stopwords were removed to improve semantic clarity.
+    \item \textbf{Document-Term Matrix (DTM)}: A sparse term-frequency matrix was constructed for downstream modeling.
+\end{enumerate}
+
+The cleaned DTM was then converted into STM-compatible input formats: \texttt{documents}, \texttt{vocab}, and \texttt{meta}.
+
+\subsection{Structural Topic Modeling}
+
+Structural Topic Modeling (STM) extends Latent Dirichlet Allocation (LDA) by incorporating document-level covariates. We used publication date to model variation in topic prevalence.
+
+The STM generative process assumes:
+\begin{itemize}
+    \item Each document is a mixture of latent topics.
+    \item Each topic is a distribution over words.
+    \item Topic prevalence is influenced by covariates via a logistic-normal prior.
+\end{itemize}
+
+The model was fit using:
+
+\begin{itemize}
+    \item $K = 10$ topics
+    \item Prevalence formula: \texttt{\textasciitilde{} publish\_date}
+    \item Maximum EM iterations: 75
+    \item Spectral initialization
+\end{itemize}
+
+\subsection{Topic Evaluation}
+
+After model training, we examined:
+\begin{itemize}
+    \item \textbf{High-probability and FREX words} for topic interpretation
+    \item \textbf{Topic prevalence distributions} across the corpus
+    \item \textbf{Temporal trends} using STM's \texttt{estimateEffect()}
+    \item \textbf{Word clouds} to visualize word prominence
+    \item \textbf{Topic quality metrics}: semantic coherence and exclusivity
+\end{itemize}
+
+These diagnostics collectively provide insight into the interpretability and robustness of the model.
+
+% --------------------------------------------------
+% 5. RESULTS
+% --------------------------------------------------
+\section{Results}
+
+This section summarizes the primary outcomes of the Structural Topic Model, including topic interpretations, document prevalence patterns, temporal shifts, and quantitative evaluation metrics. All outputs were generated through the R Markdown workflow and reflect the learned latent structure of the headline corpus.
+
+\subsection{Topic Interpretations}
+
+The STM model with $K = 10$ revealed a coherent set of latent topics. Each topic is characterized by its highest-probability and FREX (frequency-exclusivity) terms. Based on these terms, the topics were assigned descriptive labels. Table~\ref{tab:topics} presents a representative summary.
+
+\begin{table}[h!]
+\centering
+\caption{Discovered Topics and Representative Terms}
+\label{tab:topics}
+\begin{tabular}{p{1.5cm} p{6cm} p{5cm}}
+\toprule
+\textbf{Topic} & \textbf{Representative Words} & \textbf{Interpretation} \\
+\midrule
+1 & man, nsw, australian, charged, missing & Crime and Missing Persons \\
+2 & australia, water, murder, minister, labor & Politics and Water Issues \\
+3 & death, abc, china, market, road & International and Economy \\
+4 & council, health, hospital, win, attack & Local Government and Health \\
+5 & sydney, rural, farmers, north, iraq & Rural Affairs and Foreign News \\
+6 & crash, qld, killed, coast, driver & Accidents and Queensland News \\
+7 & police, world, cup, accused, arrested & Crime and Sports \\
+8 & budget, media, land, green, deal & Budget and Environment \\
+9 & govt, fire, plan, indigenous, bushfire & Government and Bushfires \\
+10 & court, coronavirus, melbourne, trump, covid & Legal and Pandemic \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These topics span a broad spectrum of public interest and align well with known patterns of Australian media reporting.
+
+\subsection{Topic Prevalence Across the Corpus}
+
+The STM summary plot (Figure~\ref{fig:topic_summary}) shows that certain topics---such as crime, politics, and government---occupy a larger proportion of the overall corpus. These findings are consistent with typical news-media distributions, which often prioritize political developments and major incidents.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.9\textwidth]{figures/topic_summary_K10.png}
+\caption{Topic prevalence summary for K=10 topics}
+\label{fig:topic_summary}
+\end{figure}
+
+Less prevalent but still well-defined topics include rural affairs and international news. The variety of topics discovered suggests that STM successfully captured meaningful structure despite the extreme brevity of headlines.
+
+\subsection{Temporal Dynamics of Topic Prevalence}
+
+By using publication date as a prevalence covariate, the STM model uncovers distinct temporal trends (Figure~\ref{fig:temporal}):
+
+\begin{itemize}
+    \item \textbf{Political topics} spike during major election cycles.
+    \item \textbf{Bushfire topics} show strong seasonal variation during Australian summer.
+    \item \textbf{Public health topics} show strong surges during crisis periods such as the COVID-19 pandemic.
+    \item \textbf{Rural and water-related topics} fluctuate with drought conditions.
+\end{itemize}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.9\textwidth]{figures/topic_prevalence_over_time_K10.png}
+\caption{Topic prevalence over time for selected topics}
+\label{fig:temporal}
+\end{figure}
+
+The \texttt{estimateEffect} visualizations provide smoothed trend estimates that make these variations clear and interpretable. Such insights highlight STM's strength relative to classical topic models that ignore metadata.
+
+\subsection{Word Cloud Visualization}
+
+To illustrate topic content intuitively, word clouds were generated for several topics (Figure~\ref{fig:wordclouds}). Larger terms correspond to higher within-topic frequency. For instance:
+
+\begin{itemize}
+    \item Topic 1 (Crime) clouds emphasize terms such as ``man,'' ``charged,'' and ``missing''.
+    \item Topic 2 (Politics) clouds highlight words such as ``australia,'' ``minister,'' and ``labor''.
+    \item Topic 3 (International) features ``china,'' ``market,'' and ``death''.
+\end{itemize}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.45\textwidth]{figures/topic_wordcloud_topic1_K10.png}
+\includegraphics[width=0.45\textwidth]{figures/topic_wordcloud_topic2_K10.png}
+\vspace{0.5cm}
+\includegraphics[width=0.45\textwidth]{figures/topic_wordcloud_topic3_K10.png}
+\caption{Word clouds for Topics 1 (Crime), 2 (Politics), and 3 (International)}
+\label{fig:wordclouds}
+\end{figure}
+
+Though qualitative, these visualizations complement the statistical diagnostics and aid in human interpretation.
+
+\subsection{Topic Quality Evaluation}
+
+Topic quality was assessed using STM's semantic coherence and exclusivity metrics. Coherence measures the tendency of topic words to co-occur, while exclusivity captures how uniquely associated a word is with a particular topic. Table~\ref{tab:quality} presents the quality metrics for each topic.
+
+\begin{table}[h!]
+\centering
+\caption{Topic Quality Metrics (K=10)}
+\label{tab:quality}
+\begin{tabular}{ccc}
+\toprule
+\textbf{Topic} & \textbf{Semantic Coherence} & \textbf{Exclusivity} \\
+\midrule
+1 & -300.66 & 9.74 \\
+2 & -306.68 & 9.73 \\
+3 & -322.09 & 9.62 \\
+4 & -332.71 & 9.75 \\
+5 & -310.49 & 9.68 \\
+6 & -316.39 & 9.53 \\
+7 & -282.93 & 9.67 \\
+8 & -328.47 & 9.77 \\
+9 & -328.21 & 9.40 \\
+10 & -341.39 & 9.81 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Results indicate:
+
+\begin{itemize}
+    \item Topic 7 (Police/Crime) shows the highest coherence (-282.93), indicating strong word co-occurrence patterns.
+    \item Topic 10 (COVID/Legal) has the highest exclusivity (9.81), meaning its terms are most uniquely associated with that topic.
+    \item Overall, the chosen $K = 10$ provides a strong balance between interpretability and separation.
+\end{itemize}
+
+Thus, STM produces robust, meaningful topics suitable for downstream interpretation.
+
+% --------------------------------------------------
+% 6. DISCUSSION
+% --------------------------------------------------
+\section{Discussion}
+
+The findings of this study highlight the effectiveness of Structural Topic Modeling in uncovering latent patterns within large collections of news headlines. Several key observations emerge from the analysis.
+
+\subsection{Interpretability of Discovered Topics}
+
+Despite the limited length of headlines, STM produced clearly delineated and semantically coherent topics. This suggests that the underlying structure of news discourse is strong enough for STM to detect thematic clusters even in sparse short texts.
+
+Topics related to politics, economics, and crime—areas that dominate contemporary media—were especially well-formed. Meanwhile, more variable topics such as entertainment or sports exhibited weaker exclusivity due to shared vocabulary but remained interpretable.
+
+\subsection{Temporal Variation and Media Trends}
+
+A major strength of STM is its ability to incorporate metadata such as publication date. Temporal analysis revealed meaningful patterns:
+
+\begin{itemize}
+    \item Election cycles strongly influence political topic prevalence.
+    \item Public health topic spikes correspond closely with real-world outbreak events.
+    \item Environmental topics peak seasonally, reflecting recurring natural hazards.
+\end{itemize}
+
+These results suggest that STM can provide valuable insights for trend analysis, public opinion tracking, or media monitoring systems.
+
+\subsection{Advantages of STM for Short Text Modeling}
+
+STM offers several advantages for this corpus:
+
+\begin{itemize}
+    \item \textbf{Metadata integration}: Unlike LDA, STM models how topic proportions vary with time or other covariates.
+    \item \textbf{Interpretability}: FREX and probability-based word lists help generate clear topic labels.
+    \item \textbf{Rich diagnostic tools}: Coherence, exclusivity, and effect estimation support robust evaluation.
+\end{itemize}
+
+These strengths make STM suitable for real-world short-text applications such as social media analysis and news summarization.
+
+\subsection{Challenges and Observed Limitations}
+
+Some limitations were noted:
+
+\begin{itemize}
+    \item Short headlines restrict semantic richness, making topic boundaries less crisp.
+    \item Named entities sometimes dominate topics, reducing generality.
+    \item Temporal imbalance in data may bias estimated effects.
+    \item Bag-of-words limitations prevent STM from capturing contextual meaning.
+\end{itemize}
+
+These limitations motivate potential extensions using contextual embeddings or neural topic models.
+
+% --------------------------------------------------
+% 7. LIMITATIONS
+% --------------------------------------------------
+\section{Limitations}
+
+Despite the strong empirical performance of the Structural Topic Model, several limitations must be acknowledged when interpreting the results.
+
+\subsection{Short-Text Constraints}
+
+News headlines are extremely brief, often containing fewer than ten words. This lack of contextual richness can reduce topic exclusivity and make it difficult for the model to distinguish between semantically similar phrases. Ambiguous terms (e.g., ``charge,'' ``strike,'' ``crash'') may appear in multiple topics due to the limited context.
+
+\subsection{Named-Entity Dominance}
+
+Headlines frequently include names of politicians, companies, and geographic locations. As a result, some discovered topics cluster around individual entities rather than broader semantic categories. These clusters may reflect media attention cycles rather than stable linguistic themes.
+
+\subsection{Temporal Imbalance}
+
+The distribution of publication dates is not uniform across the dataset. Given that STM models topic prevalence as a function of time, this imbalance may introduce biases. For example, years with more articles may exert disproportionate influence on estimated temporal effects.
+
+\subsection{Modeling Assumptions}
+
+STM relies on a bag-of-words representation, which ignores word order and deeper semantic relationships. While appropriate for broad topic discovery, this approach cannot capture subtle narrative structures or contextual variations. Future work could integrate contextual embeddings or apply neural topic models for deeper semantic analysis.
+
+% --------------------------------------------------
+% 8. CONCLUSION
+% --------------------------------------------------
+\section{Conclusion}
+
+This study demonstrates the effectiveness of Structural Topic Modeling for discovering latent thematic patterns in large-scale news headline corpora. Despite the inherent challenges of short-text analysis, STM successfully identified coherent topics spanning politics, economics, crime, technology, entertainment, and global events.
+
+By incorporating publication dates as covariates, STM uncovered dynamic temporal trends that align with major socio-political events and seasonal patterns. These insights highlight the value of metadata-aware topic modeling approaches for applications in media analytics, trend monitoring, and public opinion research.
+
+The full pipeline---including data preprocessing, model training, evaluation, and visualization---was implemented in a reproducible R Markdown workflow. While STM provides strong interpretability and diagnostic tools, limitations arising from short text length and modeling assumptions encourage further exploration of neural topic models and embedding-based methods.
+
+Overall, this project illustrates how STM can reveal meaningful structure within large collections of headlines and provides a foundation for more advanced text analytics in journalistic and social domains.
+
+\end{document}

@@ -1,0 +1,222 @@
+---
+title: "CSCI S-89B Final Project – STM Topic Modeling on News Headlines"
+author: "InJoo Kim"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(lubridate)
+  library(stringr)
+  library(quanteda)
+  library(stm)
+})
+
+options(stringsAsFactors = FALSE)
+
+# Resolve project root whether you run from repo root or from /notebooks
+project_root <- if (dir.exists("data")) {
+  getwd()
+} else if (dir.exists("../data")) {
+  normalizePath("..")
+} else {
+  getwd()
+}
+
+path_sample <- file.path(project_root, "data", "sample", "news_headlines_sample.csv")
+path_figs   <- file.path(project_root, "report", "figures")
+path_tables <- file.path(project_root, "report", "tables")
+if (!dir.exists(path_figs)) dir.create(path_figs, recursive = TRUE)
+if (!dir.exists(path_tables)) dir.create(path_tables, recursive = TRUE)
+```
+
+# 1. Goal
+
+I use **Structural Topic Modeling (STM)** to discover latent themes in a large collection of news headlines, and I use **metadata (publish date)** to see how topic prevalence changes over time.
+
+# 2. Load sample data
+
+```{r}
+if (!file.exists(path_sample)) {
+  stop(paste0(
+    "Sample file not found at: ", path_sample, "\n",
+    "Create it with: Rscript src/01_make_sample.R <raw_csv> data/sample/news_headlines_sample.csv 20000"
+  ))
+}
+
+news <- readr::read_csv(path_sample, show_col_types = FALSE)
+
+dplyr::glimpse(news)
+news %>% dplyr::slice_head(n = 5)
+```
+
+# 3. Basic cleaning + date parsing
+
+```{r}
+news_clean <- news %>%
+  transmute(
+    headline = as.character(headline_text),
+    publish_date_raw = as.character(publish_date)
+  ) %>%
+  filter(!is.na(headline), str_length(str_trim(headline)) > 0) %>%
+  mutate(
+    # ABC News date format is YYYYMMDD (e.g., 20171212)
+    publish_date = suppressWarnings(ymd(publish_date_raw, tz = "UTC")),
+    publish_date = as.Date(publish_date)
+  ) %>%
+  filter(!is.na(publish_date)) %>%
+  mutate(
+    year = lubridate::year(publish_date)
+  )
+
+summary(news_clean$publish_date)
+```
+
+# 4. Tokenization + DTM (quanteda → stm format)
+
+```{r}
+# Minimal preprocessing for headlines: lowercasing + keep letters/spaces
+text_clean <- news_clean$headline %>%
+  str_to_lower() %>%
+  str_replace_all("[^a-z\\s]", " ") %>%
+  str_squish()
+
+toks <- tokens(text_clean, remove_punct = TRUE, remove_numbers = TRUE)
+toks_clean <- tokens_remove(toks, stopwords("en"))
+
+# drop very short tokens
+toks_clean <- tokens_keep(toks_clean, pattern = "^[a-z]{3,}$", valuetype = "regex")
+
+dfm_mat <- dfm(toks_clean)
+
+# Remove very rare terms to stabilize STM
+dfm_mat <- dfm_trim(dfm_mat, min_termfreq = 5)
+
+# Remove documents with no features (empty after preprocessing)
+non_empty <- rowSums(dfm_mat) > 0
+dfm_mat <- dfm_mat[non_empty, ]
+meta <- news_clean[non_empty, ]
+
+stm_in <- convert(dfm_mat, to = "stm")
+docs  <- stm_in$documents
+vocab <- stm_in$vocab
+
+list("n_docs" = length(docs), "vocab_size" = length(vocab), "meta_rows" = nrow(meta))
+```
+
+# 5. Pick K (searchK) + Fit final STM
+
+```{r}
+set.seed(123)
+
+K_grid <- c(5, 10, 15, 20)
+
+k_search <- searchK(
+  documents  = docs,
+  vocab      = vocab,
+  K          = K_grid,
+  prevalence = ~ year,
+  data       = meta
+)
+
+plot(k_search)
+
+# Choose K 
+K_final <- 10
+
+stm_model <- stm(
+  documents  = docs,
+  vocab      = vocab,
+  data       = meta,
+  K          = K_final,
+  prevalence = ~ year,
+  verbose    = TRUE
+)
+```
+
+# 6. Inspect topics
+
+```{r}
+labelTopics(stm_model, n = 10)
+
+# Save summary plot using base R graphics
+png(filename = file.path(path_figs, paste0("topic_summary_K", K_final, ".png")),
+    width = 1200, height = 800, res = 120)
+plot(stm_model, type = "summary", main = "Topic Prevalence (K=10)")
+dev.off()
+
+# Display in notebook
+plot(stm_model, type = "summary", main = "Topic Prevalence (K=10)")
+```
+
+# 7. Topic prevalence over time (estimateEffect)
+
+```{r}
+eff <- estimateEffect(1:K_final ~ year, stmobj = stm_model, metadata = meta)
+
+# Save prevalence plot using base R graphics
+png(filename = file.path(path_figs, paste0("topic_prevalence_over_time_K", K_final, ".png")),
+    width = 1200, height = 800, res = 120)
+plot(
+  eff,
+  covariate   = "year",
+  method      = "continuous",
+  topics      = c(1, 2, 3),
+  model       = stm_model,
+  printlegend = TRUE,
+  main        = "Topic Prevalence Over Time"
+)
+dev.off()
+
+# Display in notebook
+plot(
+  eff,
+  covariate   = "year",
+  method      = "continuous",
+  topics      = c(1, 2, 3),
+  model       = stm_model,
+  printlegend = TRUE,
+  main        = "Topic Prevalence Over Time"
+)
+```
+
+# 8. Word clouds (topic-level)
+
+```{r}
+# Wordcloud is base plotting; save via png()
+if (!requireNamespace("wordcloud", quietly = TRUE)) {
+  install.packages("wordcloud")
+}
+library(wordcloud)
+
+for (t in c(1, 2, 3)) {
+  png(filename = file.path(path_figs, paste0("topic_wordcloud_topic", t, "_K", K_final, ".png")),
+      width = 900, height = 900)
+  cloud(stm_model, topic = t, scale = c(4, 0.5))
+  dev.off()
+}
+```
+
+# 9. Topic quality (semantic coherence / exclusivity)
+
+```{r}
+# Calculate semantic coherence and exclusivity separately
+semcoh <- semanticCoherence(stm_model, docs)
+excl <- exclusivity(stm_model)
+
+q_df <- data.frame(
+  topic = 1:K_final,
+  semantic_coherence = semcoh,
+  exclusivity = excl
+)
+print(q_df)
+readr::write_csv(q_df, file.path(project_root, "report", "tables", paste0("topic_quality_K", K_final, ".csv")))
+```
+
